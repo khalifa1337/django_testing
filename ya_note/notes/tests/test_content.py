@@ -2,7 +2,7 @@ from django.urls import reverse
 
 from notes.forms import NoteForm
 from notes.models import Note
-from notes.tests.test_utils import (BaseTestCaseWithNote,
+from notes.tests.test_utils import (LIST_URL, BaseTestCaseWithNote,
                                     BaseTestCaseWithoutNote)
 
 
@@ -33,8 +33,7 @@ class TestListPage(BaseTestCaseWithoutNote):
     def test_only_authors_can_see_notes(self):
         """Проверка, что на странице отображаются только заметки автора."""
         self.client.force_login(self.author)
-        url = reverse('notes:list')
-        response = self.client.get(url)
+        response = self.client.get(LIST_URL)
         # Также в тесте проверяем, что в object_list присутствуют заметки.
         self.assertIn('object_list', response.context)
         notes = response.context['object_list']
