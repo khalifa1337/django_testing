@@ -1,12 +1,12 @@
 from http import HTTPStatus
 
 from django.test import Client
-from django.urls import reverse
 from pytils.translit import slugify
 
 from notes.forms import WARNING
 from notes.models import Note
-from notes.tests.test_utils import BaseTestCaseWithNote, NoteCreationForm
+from notes.tests.test_utils import (DELETE_URL, DONE_URL, EDIT_URL,
+                                    BaseTestCaseWithNote, NoteCreationForm)
 
 
 class TestNoteCreation(NoteCreationForm):
@@ -108,36 +108,33 @@ class TestCommentEditDelete(BaseTestCaseWithNote, NoteCreationForm):
         super().setUpTestData()
         cls.reader_client = Client()
         cls.reader_client.force_login(cls.reader)
-        cls.edit_url = reverse('notes:edit', args=(cls.note.slug,))
-        cls.delete_url = reverse('notes:delete', args=(cls.note.slug,))
-        cls.done_url = reverse('notes:success')
         cls.form_data['text'] = cls.NEW_NOTE_TEXT
 
     def test_author_can_delete_note(self):
         """Проверка возможности автором удаления своей заметки."""
-        response = self.auth_client.delete(self.delete_url)
-        self.assertRedirects(response, self.done_url)
+        response = self.auth_client.delete(DELETE_URL)
+        self.assertRedirects(response, DONE_URL)
         notes_count = Note.objects.count()
         self.assertEqual(notes_count, 0)
 
     def test_user_cant_delete_note_of_another_user(self):
         """Проверка невозможности удаления заметки другого пользователя."""
-        response = self.reader_client.delete(self.delete_url)
+        response = self.reader_client.delete(DELETE_URL)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         notes_count = Note.objects.count()
         self.assertEqual(notes_count, 1)
 
     def test_author_can_edit_note(self):
         """Проверка возможности автора редактирования своей заметки."""
-        response = self.auth_client.post(self.edit_url, data=self.form_data)
-        self.assertRedirects(response, self.done_url)
+        response = self.auth_client.post(EDIT_URL, data=self.form_data)
+        self.assertRedirects(response, DONE_URL)
         self.note.refresh_from_db()
         self.assertEqual(self.note.text, self.NEW_NOTE_TEXT)
 
     def test_user_cant_edit_comment_of_another_user(self):
         """Тест невозможности редактирования заметки другого пользователя."""
         note_text = self.note.text
-        response = self.reader_client.post(self.edit_url, data=self.form_data)
+        response = self.reader_client.post(EDIT_URL, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.note.refresh_from_db()
         self.assertEqual(self.note.text, note_text)
