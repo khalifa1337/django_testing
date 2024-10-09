@@ -33,11 +33,14 @@ class TestNoteCreation(NoteCreationForm):
         )
         for user, notes_count in users_nots:
             with self.subTest(user=user):
+                initial_count = Note.objects.count()
                 user.post(self.create_url, data=self.form_data)
-                self.assertEqual(Note.objects.count(), notes_count)
+                self.assertEqual(
+                    Note.objects.count(),
+                    initial_count + notes_count
+                )
                 if user == self.auth_client:
                     our_note = Note.objects.get()
-                    # Лишняя паранойя не лишняя в случае тестов (надеюсь).
                     self.assertEqual(our_note.title, self.form_data['title'])
                     self.assertEqual(our_note.text, self.form_data['text'])
                     self.assertEqual(our_note.slug, self.form_data['slug'])
