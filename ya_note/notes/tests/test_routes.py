@@ -13,57 +13,32 @@ class TestRoutes(BaseTestCaseWithNote):
     Пользователь cls.reader
     Заметка cls.note
     """
-
-    def test_pages_for_all_users_availability(self):
-        """Проверка доступности страниц для всех пользователей."""
+    def test_pages_availability(self):
+        """Проверка доступности страниц для различных типов пользователей."""
+        status_ok = HTTPStatus.OK
+        status_404 = HTTPStatus.NOT_FOUND
         pages = (
-            ('notes:home', None),
-            ('users:login', None),
-            ('users:signup', None),
-            ('users:logout', None),
+            ('notes:home', None, None, status_ok),
+            ('users:login', None, None, status_ok),
+            ('users:signup', None, None, status_ok),
+            ('users:logout', None, None, status_ok),
+            ('notes:list', None, self.reader, status_ok),
+            ('notes:add', None, self.reader, status_ok),
+            ('notes:success', None, self.reader, status_ok),
+            ('notes:detail', (self.note.slug,), self.author, status_ok),
+            ('notes:edit', (self.note.slug,), self.author, status_ok),
+            ('notes:delete', (self.note.slug,), self.author, status_ok),
+            ('notes:detail', (self.note.slug,), self.reader, status_404),
+            ('notes:edit', (self.note.slug,), self.reader, status_404),
+            ('notes:delete', (self.note.slug,), self.reader, status_404),
         )
-
-        for page, args in pages:
-            with self.subTest(page=page):
+        for page, args, user, expected_status in pages:
+            if user:
+                self.client.force_login(user)
+            with self.subTest(page=page, expected_status=expected_status):
                 url = reverse(page, args=args)
                 response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_pages_for_auth_user_availability(self):
-        """Проверка доступности страниц для авторизированных пользователей."""
-        pages = (
-            ('notes:list', None),
-            ('notes:add', None),
-            ('notes:success', None),
-        )
-
-        for page, args in pages:
-            with self.subTest(page=page):
-                self.client.force_login(self.reader)
-                url = reverse(page, args=args)
-                response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)
-
-    def test_pages_only_for_author_availability(self):
-        """Проверка доступности страниц только для их автора."""
-        users_statuses = (
-            (self.author, HTTPStatus.OK),
-            (self.reader, HTTPStatus.NOT_FOUND),
-        )
-
-        pages = (
-            'notes:detail',
-            'notes:edit',
-            'notes:delete',
-        )
-
-        for user, status in users_statuses:
-            self.client.force_login(user)
-            for name in pages:
-                with self.subTest(name=name):
-                    url = reverse(name, args=(self.note.slug,))
-                    response = self.client.get(url)
-                    self.assertEqual(response.status_code, status)
+                self.assertEqual(response.status_code, expected_status)
 
     def test_redirect_for_anonymous_client(self):
         """Проверка редиректа для анонимного пользователя."""
