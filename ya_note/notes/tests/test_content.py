@@ -41,6 +41,11 @@ class TestListPage(BaseTestCaseWithoutNote):
         self.assertEqual(len(notes), 3)
         author = [note.author for note in notes]
         self.assertEqual(set(author), {self.author})
+        reader_notes_exist = any(note.author == self.reader for note in notes)
+        self.assertFalse(
+            reader_notes_exist,
+            "На странице отображаются заметки другого пользователя"
+        )
 
 
 class TestDetailPage(BaseTestCaseWithNote):
@@ -56,5 +61,4 @@ class TestDetailPage(BaseTestCaseWithNote):
             with self.subTest(name=name):
                 url = reverse(name, args=args)
                 response = self.client.get(url)
-                self.assertIn('form', response.context)
-                self.assertIsInstance(response.context['form'], NoteForm)
+                self.assertIsInstance(response.context.get('form'), NoteForm)
