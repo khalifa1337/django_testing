@@ -9,6 +9,11 @@ from news.models import Comment, News
 
 
 @pytest.fixture
+def anonymous_client():
+    return Client()
+
+
+@pytest.fixture
 def author(django_user_model):
     """Фикстура для создания автора."""
     return django_user_model.objects.create(username='Автор')
@@ -64,6 +69,11 @@ def comment_id_for_args(comment):
 
 
 @pytest.fixture
+def news_id_for_args(news):
+    """Фикстура для получения id новости в аргументах."""
+    return (news.id,)
+
+@pytest.fixture
 def form_data():
     """Фикстура для создания словаря с данными для формы комментария."""
     return {
@@ -109,3 +119,8 @@ def comment_delete_url(comment_id_for_args):
 def comment_edit_url(comment_id_for_args):
     """Фикстура для получения url редактирования комментария."""
     return reverse('news:edit', args=comment_id_for_args)
+
+
+@pytest.fixture
+def login_url():
+    return reverse('users:login')
