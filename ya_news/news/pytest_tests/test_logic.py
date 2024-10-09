@@ -6,11 +6,12 @@ from django.urls import reverse
 from news.forms import BAD_WORDS, WARNING
 from news.models import Comment
 
+FORM_DATA = {'text': 'Новый текст', }
 
-@pytest.mark.django_db
-def test_anonymous_user_cant_create_comment(client, form_data, detail_url):
+
+def test_anonymous_user_cant_create_comment(client, detail_url):
     """Проверка невозможности создания комментария без авторизации."""
-    response = client.post(detail_url, data=form_data)
+    response = client.post(detail_url, data=FORM_DATA)
     login_url = reverse('users:login')
     expected_url = f'{login_url}?next={detail_url}'
     assert response.status_code == 302
@@ -19,15 +20,15 @@ def test_anonymous_user_cant_create_comment(client, form_data, detail_url):
 
 
 def test_auth_user_can_create_comment(
-    author_client, form_data, author, detail_url
+    author_client, author, detail_url
 ):
     """Проверка возможности создания коммента авторизованным пользователем."""
-    response = author_client.post(detail_url, data=form_data)
+    response = author_client.post(detail_url, data=FORM_DATA)
     success_url = detail_url + '#comments'
     assert response.url == success_url
     assert Comment.objects.count() == 1
     our_comment = Comment.objects.get()
-    assert our_comment.text == form_data['text']
+    assert our_comment.text == FORM_DATA['text']
     assert our_comment.author == author
 
 
@@ -48,15 +49,15 @@ def test_form_with_badwords_dont_posted_to_db(author_client, detail_url):
 
 
 def test_author_can_edit_comment(
-    author_client, form_data, comment, detail_url, comment_edit_url
+    author_client, comment, detail_url, comment_edit_url
 ):
     """Проверка возможности редактирования своего комментария."""
-    response = author_client.post(comment_edit_url, form_data)
+    response = author_client.post(comment_edit_url, FORM_DATA)
     assert response.status_code == 302
     success_url = detail_url + '#comments'
     assert response.url == success_url
     comment.refresh_from_db()
-    assert comment.text == form_data['text']
+    assert comment.text == FORM_DATA['text']
 
 
 def test_author_can_delete_comment(
@@ -71,11 +72,11 @@ def test_author_can_delete_comment(
 
 
 def test_other_user_cant_edit_comment(
-    not_author_client, form_data, comment, comment_edit_url
+    not_author_client, comment, comment_edit_url
 ):
     """Тест невозможности редактирования комментария другого пользователя."""
     original_comment = comment.text
-    response = not_author_client.post(comment_edit_url, form_data)
+    response = not_author_client.post(comment_edit_url, FORM_DATA)
     assert response.status_code == HTTPStatus.NOT_FOUND
     comment.refresh_from_db()
     assert comment.text == original_comment
