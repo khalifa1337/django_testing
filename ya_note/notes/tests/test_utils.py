@@ -6,6 +6,12 @@ from notes.models import Note
 
 User = get_user_model()
 
+DEFAULT_SLUG = 'test-slug'
+EDIT_URL = reverse('notes:edit', args=(DEFAULT_SLUG,))
+DELETE_URL = reverse('notes:delete', args=(DEFAULT_SLUG,))
+DONE_URL = reverse('notes:success')
+LOGIN_URL = reverse('users:login')
+LIST_URL = reverse('notes:list')
 
 class BaseTestCaseWithoutNote(TestCase):
     """
@@ -47,7 +53,7 @@ class BaseTestCaseWithNote(BaseTestCaseWithoutNote):
         cls.note = Note.objects.create(
             title='Тестовый заголовок',
             text='Тестовая заметка',
-            slug='test-slug',
+            slug=DEFAULT_SLUG,
             author=cls.author,
         )
 
