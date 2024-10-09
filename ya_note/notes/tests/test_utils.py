@@ -13,6 +13,7 @@ DONE_URL = reverse('notes:success')
 LOGIN_URL = reverse('users:login')
 LIST_URL = reverse('notes:list')
 
+
 class BaseTestCaseWithoutNote(TestCase):
     """
     Так как для нескольких тестов используются одинаковые пользователи,
