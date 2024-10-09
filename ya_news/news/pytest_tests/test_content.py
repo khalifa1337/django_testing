@@ -1,4 +1,5 @@
 from django.conf import settings
+from pytest_django.asserts import assertFormError
 
 from news.forms import CommentForm
 
