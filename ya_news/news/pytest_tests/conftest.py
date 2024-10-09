@@ -8,6 +8,11 @@ from django.urls import reverse
 from news.models import Comment, News
 
 
+@pytest.fixture(autouse=True)
+def enable_db_access_for_all_tests(db):
+    pass
+
+
 @pytest.fixture
 def anonymous_client():
     return Client()
@@ -42,59 +47,51 @@ def not_author_client(not_author):
 
 
 @pytest.fixture
-def news(db):
+def news():
     """Фикстура для создания новости."""
-    news = News.objects.create(
+    return News.objects.create(
         title='Заголовок',
         text='Текст новости',
     )
-    return news
 
 
 @pytest.fixture
 def comment(author, news):
     """Фикстура для создания комментария."""
-    comment = Comment.objects.create(
+    return Comment.objects.create(
         news=news,
         author=author,
         text='А вот в наше время было лучше!',
     )
-    return comment
 
 
 @pytest.fixture
-def comment_id_for_args(comment):
-    """Фикстура для получения id комментария в аргументах."""
-    return (comment.id,)
-
-
-@pytest.fixture
-def news_id_for_args(news):
-    """Фикстура для получения id новости в аргументах."""
-    return (news.id,)
-
-@pytest.fixture
-def form_data():
-    """Фикстура для создания словаря с данными для формы комментария."""
-    return {
-        'text': 'Новый текст',
-    }
-
-
-@pytest.fixture
-def many_news(db):
+def many_news():
     """Фикстура для создания нескольких новостей."""
     today = datetime.today()
-    all_news = [
+    News.objects.bulk_create(
         News(
             title=f'Новость {index}',
             text='Просто текст.',
             date=today - timedelta(days=index)
         )
         for index in range(settings.NEWS_COUNT_ON_HOME_PAGE + 1)
-    ]
-    many_news = News.objects.bulk_create(all_news)
-    return many_news
+    )
+
+
+@pytest.fixture
+def many_comments(news, author):
+    """Фикстура для создания нескольких комментариев."""
+    today = datetime.today()
+    Comment.objects.bulk_create(
+        Comment(
+            news=news.id,
+            author=author,
+            text=f'Комментарий {index}',
+            date=today - timedelta(days=index)
+        )
+        for index in range(5)
+    )
 
 
 @pytest.fixture
@@ -110,17 +107,18 @@ def home_url():
 
 
 @pytest.fixture
-def comment_delete_url(comment_id_for_args):
+def comment_delete_url(comment):
     """Фикстура для получения url удаления комментария."""
-    return reverse('news:delete', args=comment_id_for_args)
+    return reverse('news:delete', args=(comment.id, ))
 
 
 @pytest.fixture
-def comment_edit_url(comment_id_for_args):
+def comment_edit_url(comment):
     """Фикстура для получения url редактирования комментария."""
-    return reverse('news:edit', args=comment_id_for_args)
+    return reverse('news:edit', args=(comment.id, ))
 
 
 @pytest.fixture
 def login_url():
+    """Фикстура для получения url логина."""
     return reverse('users:login')
