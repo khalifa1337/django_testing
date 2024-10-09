@@ -2,7 +2,7 @@ from http import HTTPStatus
 
 from django.urls import reverse
 
-from notes.tests.test_utils import BaseTestCaseWithNote
+from notes.tests.test_utils import LOGIN_URL, BaseTestCaseWithNote
 
 
 class TestRoutes(BaseTestCaseWithNote):
@@ -17,6 +17,7 @@ class TestRoutes(BaseTestCaseWithNote):
         """Проверка доступности страниц для различных типов пользователей."""
         status_ok = HTTPStatus.OK
         status_404 = HTTPStatus.NOT_FOUND
+
         pages = (
             ('notes:home', None, None, status_ok),
             ('users:login', None, None, status_ok),
@@ -32,6 +33,7 @@ class TestRoutes(BaseTestCaseWithNote):
             ('notes:edit', (self.note.slug,), self.reader, status_404),
             ('notes:delete', (self.note.slug,), self.reader, status_404),
         )
+
         for page, args, user, expected_status in pages:
             if user:
                 self.client.force_login(user)
@@ -42,8 +44,6 @@ class TestRoutes(BaseTestCaseWithNote):
 
     def test_redirect_for_anonymous_client(self):
         """Проверка редиректа для анонимного пользователя."""
-        login_url = reverse('users:login')
-
         pages = (
             ('notes:list', None),
             ('notes:detail', (self.note.slug,)),
@@ -53,9 +53,9 @@ class TestRoutes(BaseTestCaseWithNote):
             ('notes:success', None),
         )
 
-        for name, args in pages:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
-                redirect_url = f'{login_url}?next={url}'
+        for page, args in pages:
+            with self.subTest(name=page):
+                url = reverse(page, args=args)
+                redirect_url = f'{LOGIN_URL}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
