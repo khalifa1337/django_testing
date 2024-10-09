@@ -14,13 +14,11 @@ NOT_AUTHOR_CLIENT = lazy_fixture('not_author_client')
 @pytest.mark.parametrize(
     'name, args, client, expected_status',
     (
-        # Страницы для неавторизованных пользователей
         ('news:home', None, ANONYMOUS_CLIENT, HTTPStatus.OK),
         ('users:login', None, ANONYMOUS_CLIENT, HTTPStatus.OK),
         ('users:logout', None, ANONYMOUS_CLIENT, HTTPStatus.OK),
         ('users:signup', None, ANONYMOUS_CLIENT, HTTPStatus.OK),
         ('news:detail', NEWS_FOR_ARGS, ANONYMOUS_CLIENT, HTTPStatus.OK),
-        # Страницы для авторизованных пользователей
         ('news:edit', COMMENT_FOR_ARGS, AUTHOR_CLIENT, HTTPStatus.OK),
         ('news:delete', COMMENT_FOR_ARGS, AUTHOR_CLIENT, HTTPStatus.OK),
         ('news:edit',
