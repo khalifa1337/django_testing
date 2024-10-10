@@ -1,9 +1,9 @@
-from django.urls import reverse
-
 from notes.forms import NoteForm
 from notes.models import Note
-from notes.tests.test_utils import (LIST_URL, BaseTestCaseWithNote,
-                                    BaseTestCaseWithoutNote)
+from notes.tests.test_utils import (
+    ADD_URL, EDIT_URL, LIST_URL,
+    BaseTestCaseWithNote,
+    BaseTestCaseWithoutNote)
 
 
 class TestListPage(BaseTestCaseWithoutNote):
@@ -32,8 +32,7 @@ class TestListPage(BaseTestCaseWithoutNote):
 
     def test_only_authors_can_see_notes(self):
         """Проверка, что на странице отображаются только заметки автора."""
-        self.client.force_login(self.author)
-        response = self.client.get(LIST_URL)
+        response = self.author_client.get(LIST_URL)
         # Также в тесте проверяем, что в object_list присутствуют заметки.
         self.assertIn('object_list', response.context)
         notes = response.context['object_list']
@@ -52,12 +51,10 @@ class TestDetailPage(BaseTestCaseWithNote):
     def test_authorized_client_has_form(self):
         """Проверка формы для авторизированных пользователей."""
         pages = (
-            ('notes:edit', (self.note.slug,)),
-            ('notes:add', None),
+            EDIT_URL,
+            ADD_URL,
         )
-        self.client.force_login(self.author)
-        for name, args in pages:
-            with self.subTest(name=name):
-                url = reverse(name, args=args)
-                response = self.client.get(url)
+        for url in pages:
+            with self.subTest(name=url):
+                response = self.author_client.get(url)
                 self.assertIsInstance(response.context.get('form'), NoteForm)
