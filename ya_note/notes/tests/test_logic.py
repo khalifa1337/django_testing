@@ -5,7 +5,7 @@ from pytils.translit import slugify
 
 from notes.forms import WARNING
 from notes.models import Note
-from notes.tests.test_utils import (DELETE_URL, DONE_URL, EDIT_URL,
+from notes.tests.test_utils import (ADD_URL, DELETE_URL, DONE_URL, EDIT_URL,
                                     BaseTestCaseWithNote, NoteCreationForm)
 
 
@@ -13,10 +13,9 @@ class TestNoteCreation(NoteCreationForm):
     """
     Тестирование логики создания заметок.
     Наследуется от класса NoteCreationForm, который содержит в себе:
-    Пользователь self.author
-    Пользователь self.reader
+    Пользователь self.author (также клиент self.author_client)
+    Пользователь self.reader (также клиент self.reader_client)
     Содержит в себе:
-    Авторизованный клиент self.auth_client от self.author
     URL для создания заметки self.create_url
     Данные для создания заметки self.form_data
     """
@@ -29,17 +28,17 @@ class TestNoteCreation(NoteCreationForm):
         """
         users_nots = (
             (self.client, 0),
-            (self.auth_client, 1),
+            (self.author_client, 1),
         )
         for user, notes_count in users_nots:
             with self.subTest(user=user):
                 initial_count = Note.objects.count()
-                user.post(self.create_url, data=self.form_data)
+                user.post(ADD_URL, data=self.form_data)
                 self.assertEqual(
                     Note.objects.count(),
                     initial_count + notes_count
                 )
-                if user == self.auth_client:
+                if user == self.author_client:
                     our_note = Note.objects.get()
                     self.assertEqual(our_note.title, self.form_data['title'])
                     self.assertEqual(our_note.text, self.form_data['text'])
@@ -52,7 +51,7 @@ class TestNoteCreation(NoteCreationForm):
         если он не передаётся явно.
         """
         self.form_data.pop('slug')
-        self.auth_client.post(self.create_url, data=self.form_data)
+        self.author_client.post(ADD_URL, data=self.form_data)
         new_slug = slugify(self.form_data['title'])
         self.assertEqual(Note.objects.get().slug, new_slug)
 
@@ -61,10 +60,10 @@ class TestNoteCreationValidate(BaseTestCaseWithNote, NoteCreationForm):
     """
     Тестирование логики валидации данных для создания заметки.
     Наследуется от класса NoteCreationForm, который содержит в себе:
-    Пользователь self.author
-    Пользователь self.reader
+    Пользователь self.author (также клиент self.author_client)
+    Пользователь self.reader (также клиент self.reader_client)
     Содержит в себе:
-    Авторизованный клиент self.auth_client от self.author
+    Авторизованный клиент self.author_client от self.author
     URL для создания заметки self.create_url
     Данные для создания заметки self.form_data
     Также от класса BaseTestCaseWithNote, который содержит в себе:
@@ -76,7 +75,9 @@ class TestNoteCreationValidate(BaseTestCaseWithNote, NoteCreationForm):
     def test_users_cant_add_note_with_same_slug(self):
         """Проверка невозможности создания заметки с одинаковым slug."""
         self.form_data['slug'] = 'test-slug'
-        response = self.auth_client.post(self.create_url, data=self.form_data)
+        response = self.author_client.post(
+            ADD_URL, data=self.form_data
+        )
         self.assertFormError(
             response, 'form', 'slug', errors=(self.note.slug + WARNING)
         )
@@ -87,10 +88,10 @@ class TestCommentEditDelete(BaseTestCaseWithNote, NoteCreationForm):
     """
     Тестирование логики работы с комментариями.
     Наследуется от класса NoteCreationForm, который содержит в себе:
-    Пользователь self.author
-    Пользователь self.reader
+    Пользователь self.author (также клиент self.author_client)
+    Пользователь self.reader (также клиент self.reader_client)
     Содержит в себе:
-    Авторизованный клиент self.auth_client от self.author
+    Авторизованный клиент self.author_client от self.author
     URL для создания заметки self.create_url
     Данные для создания заметки self.form_data
     Также от класса BaseTestCaseWithNote, который содержит в себе:
@@ -112,7 +113,7 @@ class TestCommentEditDelete(BaseTestCaseWithNote, NoteCreationForm):
 
     def test_author_can_delete_note(self):
         """Проверка возможности автором удаления своей заметки."""
-        response = self.auth_client.delete(DELETE_URL)
+        response = self.author_client.delete(DELETE_URL)
         self.assertRedirects(response, DONE_URL)
         notes_count = Note.objects.count()
         self.assertEqual(notes_count, 0)
@@ -126,7 +127,7 @@ class TestCommentEditDelete(BaseTestCaseWithNote, NoteCreationForm):
 
     def test_author_can_edit_note(self):
         """Проверка возможности автора редактирования своей заметки."""
-        response = self.auth_client.post(EDIT_URL, data=self.form_data)
+        response = self.author_client.post(EDIT_URL, data=self.form_data)
         self.assertRedirects(response, DONE_URL)
         self.note.refresh_from_db()
         self.assertEqual(self.note.text, self.NEW_NOTE_TEXT)
