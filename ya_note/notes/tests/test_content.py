@@ -50,10 +50,10 @@ class TestDetailPage(BaseTestCaseWithNote):
     def test_authorized_client_has_form(self):
         """Проверка формы для авторизированных пользователей."""
         pages = (
-            EDIT_URL,
-            ADD_URL,
+            (EDIT_URL, self.author_client,),
+            (ADD_URL, self.author_client,),
         )
-        for url in pages:
+        for url, client in pages:
             with self.subTest(name=url):
-                response = self.author_client.get(url)
+                response = client.get(url)
                 self.assertIsInstance(response.context.get('form'), NoteForm)
