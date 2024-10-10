@@ -9,10 +9,16 @@ User = get_user_model()
 DEFAULT_SLUG = 'test-slug'
 EDIT_URL = reverse('notes:edit', args=(DEFAULT_SLUG,))
 DELETE_URL = reverse('notes:delete', args=(DEFAULT_SLUG,))
+DETAIL_URL = reverse('notes:detail', args=(DEFAULT_SLUG,))
 DONE_URL = reverse('notes:success')
 LOGIN_URL = reverse('users:login')
 LIST_URL = reverse('notes:list')
 ADD_URL = reverse('notes:add')
+HOME_URL = reverse('notes:home')
+SIGNUP_URL = reverse('users:signup')
+LOGOUT_URL = reverse('users:logout')
+SUCCESS_URL = reverse('notes:success')
+
 
 
 class BaseTestCaseWithoutNote(TestCase):
@@ -40,6 +46,7 @@ class BaseTestCaseWithoutNote(TestCase):
         cls.author_client.force_login(cls.author)
         cls.reader_client = Client()
         cls.reader_client.force_login(cls.reader)
+        cls.anonymous_client = Client()
 
 
 class BaseTestCaseWithNote(BaseTestCaseWithoutNote):
@@ -78,9 +85,6 @@ class NoteCreationForm(BaseTestCaseWithoutNote):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.auth_client = Client()
-        cls.auth_client.force_login(cls.author)
-        cls.create_url = reverse('notes:add')
         cls.form_data = {
             'title': 'Заголовок',
             'text': 'Текст',
