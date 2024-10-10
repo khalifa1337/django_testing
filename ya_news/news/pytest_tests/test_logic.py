@@ -33,7 +33,7 @@ def test_auth_user_can_create_comment(
     assert our_comment.author == author
 
 
-@pytest.mark.parametrize("bad_word", BAD_WORDS)
+@pytest.mark.parametrize('bad_word', BAD_WORDS)
 def test_form_with_badwords_dont_posted_to_db(
     author_client, bad_word, detail_url
 ):
@@ -45,9 +45,6 @@ def test_form_with_badwords_dont_posted_to_db(
     bad_words_data = {'text': f'Я сказал {bad_word}, что ты мне сделаешь?'}
     response = author_client.post(detail_url, data=bad_words_data)
     assert 'form' in response.context
-    form = response.context['form']
-    assert not form.is_valid()
-    assert 'text' in form.errors
     assertFormError(response, 'form', 'text', WARNING)
     comments_count = Comment.objects.count()
     assert comments_count == previous_comment_count
