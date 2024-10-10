@@ -12,6 +12,7 @@ DELETE_URL = reverse('notes:delete', args=(DEFAULT_SLUG,))
 DONE_URL = reverse('notes:success')
 LOGIN_URL = reverse('users:login')
 LIST_URL = reverse('notes:list')
+ADD_URL = reverse('notes:add')
 
 
 class BaseTestCaseWithoutNote(TestCase):
@@ -35,6 +36,10 @@ class BaseTestCaseWithoutNote(TestCase):
         cls.reader = User.objects.create_user(
             username='IAmReaderDontTrustMe',
         )
+        cls.author_client = Client()
+        cls.author_client.force_login(cls.author)
+        cls.reader_client = Client()
+        cls.reader_client.force_login(cls.reader)
 
 
 class BaseTestCaseWithNote(BaseTestCaseWithoutNote):
