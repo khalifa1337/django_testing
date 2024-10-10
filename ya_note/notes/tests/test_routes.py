@@ -1,16 +1,17 @@
 from http import HTTPStatus
 
-from django.urls import reverse
-
-from notes.tests.test_utils import LOGIN_URL, BaseTestCaseWithNote
+from notes.tests.test_utils import (ADD_URL, DELETE_URL, DETAIL_URL, EDIT_URL,
+                                    HOME_URL, LIST_URL, LOGIN_URL, LOGOUT_URL,
+                                    SIGNUP_URL, SUCCESS_URL,
+                                    BaseTestCaseWithNote)
 
 
 class TestRoutes(BaseTestCaseWithNote):
     """
     Тестирование доступности страниц.
     Наследуется от класса, который содержит в себе:
-    Пользователь cls.author
-    Пользователь cls.reader
+    Пользователь cls.author и клиент cls.author_client
+    Пользователь cls.reader и клиент cls.reader_client
     Заметка cls.note
     """
     def test_pages_availability(self):
@@ -19,43 +20,39 @@ class TestRoutes(BaseTestCaseWithNote):
         status_404 = HTTPStatus.NOT_FOUND
 
         pages = (
-            ('notes:home', None, None, status_ok),
-            ('users:login', None, None, status_ok),
-            ('users:signup', None, None, status_ok),
-            ('users:logout', None, None, status_ok),
-            ('notes:list', None, self.reader, status_ok),
-            ('notes:add', None, self.reader, status_ok),
-            ('notes:success', None, self.reader, status_ok),
-            ('notes:detail', (self.note.slug,), self.author, status_ok),
-            ('notes:edit', (self.note.slug,), self.author, status_ok),
-            ('notes:delete', (self.note.slug,), self.author, status_ok),
-            ('notes:detail', (self.note.slug,), self.reader, status_404),
-            ('notes:edit', (self.note.slug,), self.reader, status_404),
-            ('notes:delete', (self.note.slug,), self.reader, status_404),
+            (HOME_URL, self.anonymous_client, status_ok),
+            (LOGIN_URL, self.anonymous_client, status_ok),
+            (SIGNUP_URL, self.anonymous_client, status_ok),
+            (LOGOUT_URL, self.anonymous_client, status_ok),
+            (LIST_URL, self.reader_client, status_ok),
+            (ADD_URL, self.reader_client, status_ok),
+            (SUCCESS_URL, self.reader_client, status_ok),
+            (DETAIL_URL, self.author_client, status_ok),
+            (EDIT_URL, self.author_client, status_ok),
+            (DELETE_URL, self.author_client, status_ok),
+            (DETAIL_URL, self.reader_client, status_404),
+            (EDIT_URL, self.reader_client, status_404),
+            (DELETE_URL, self.reader_client, status_404),
         )
 
-        for page, args, user, expected_status in pages:
-            if user:
-                self.client.force_login(user)
-            with self.subTest(page=page, expected_status=expected_status):
-                url = reverse(page, args=args)
-                response = self.client.get(url)
+        for url, user, expected_status in pages:
+            with self.subTest(page=url, expected_status=expected_status):
+                response = user.get(url)
                 self.assertEqual(response.status_code, expected_status)
 
     def test_redirect_for_anonymous_client(self):
         """Проверка редиректа для анонимного пользователя."""
         pages = (
-            ('notes:list', None),
-            ('notes:detail', (self.note.slug,)),
-            ('notes:edit', (self.note.slug,)),
-            ('notes:delete', (self.note.slug,)),
-            ('notes:add', None),
-            ('notes:success', None),
+            LIST_URL,
+            DETAIL_URL,
+            EDIT_URL,
+            DELETE_URL,
+            ADD_URL,
+            SUCCESS_URL,
         )
 
-        for page, args in pages:
-            with self.subTest(name=page):
-                url = reverse(page, args=args)
+        for url in pages:
+            with self.subTest(name=url):
                 redirect_url = f'{LOGIN_URL}?next={url}'
-                response = self.client.get(url)
+                response = self.anonymous_client.get(url)
                 self.assertRedirects(response, redirect_url)
