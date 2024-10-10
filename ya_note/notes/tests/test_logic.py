@@ -1,6 +1,5 @@
 from http import HTTPStatus
 
-from django.test import Client
 from pytils.translit import slugify
 
 from notes.forms import WARNING
