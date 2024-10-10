@@ -9,8 +9,8 @@ class TestListPage(BaseTestCaseWithoutNote):
     """
     Тестирование страницы списка заметок.
     Наследуется от BaseTestCaseWithoutNote, который содержит в себе:
-    Пользователь cls.author
-    Пользователь cls.reader
+    Пользователь cls.author и клиент cls.author_client
+    Пользователь cls.reader и клиент cls.reader_client
     """
 
     @classmethod
