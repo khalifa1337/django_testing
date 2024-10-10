@@ -1,9 +1,8 @@
 from notes.forms import NoteForm
 from notes.models import Note
-from notes.tests.test_utils import (
-    ADD_URL, EDIT_URL, LIST_URL,
-    BaseTestCaseWithNote,
-    BaseTestCaseWithoutNote)
+from notes.tests.test_utils import (ADD_URL, EDIT_URL, LIST_URL,
+                                    BaseTestCaseWithNote,
+                                    BaseTestCaseWithoutNote)
 
 
 class TestListPage(BaseTestCaseWithoutNote):
