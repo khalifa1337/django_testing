@@ -75,13 +75,14 @@ class TestNoteCreationValidate(BaseTestCaseWithNote, NoteCreationForm):
     def test_users_cant_add_note_with_same_slug(self):
         """Проверка невозможности создания заметки с одинаковым slug."""
         self.form_data['slug'] = 'test-slug'
+        previous_count = Note.objects.count()
         response = self.author_client.post(
             ADD_URL, data=self.form_data
         )
         self.assertFormError(
             response, 'form', 'slug', errors=(self.note.slug + WARNING)
         )
-        self.assertEqual(Note.objects.count(), 1)
+        self.assertEqual(Note.objects.count(), previous_count)
 
 
 class TestCommentEditDelete(BaseTestCaseWithNote, NoteCreationForm):
@@ -107,35 +108,35 @@ class TestCommentEditDelete(BaseTestCaseWithNote, NoteCreationForm):
         Задаем новый текст комментария.
         """
         super().setUpTestData()
-        cls.reader_client = Client()
-        cls.reader_client.force_login(cls.reader)
         cls.form_data['text'] = cls.NEW_NOTE_TEXT
 
     def test_author_can_delete_note(self):
         """Проверка возможности автором удаления своей заметки."""
+        previous_count = Note.objects.count()
         response = self.author_client.delete(DELETE_URL)
         self.assertRedirects(response, DONE_URL)
         notes_count = Note.objects.count()
-        self.assertEqual(notes_count, 0)
+        self.assertEqual(notes_count, previous_count - 1)
 
     def test_user_cant_delete_note_of_another_user(self):
         """Проверка невозможности удаления заметки другого пользователя."""
+        previous_count = Note.objects.count()
         response = self.reader_client.delete(DELETE_URL)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         notes_count = Note.objects.count()
-        self.assertEqual(notes_count, 1)
+        self.assertEqual(notes_count, previous_count)
 
     def test_author_can_edit_note(self):
         """Проверка возможности автора редактирования своей заметки."""
         response = self.author_client.post(EDIT_URL, data=self.form_data)
         self.assertRedirects(response, DONE_URL)
-        self.note.refresh_from_db()
-        self.assertEqual(self.note.text, self.NEW_NOTE_TEXT)
+        new_note = Note.objects.get(pk=self.note.pk)
+        self.assertEqual(new_note.text, self.NEW_NOTE_TEXT)
 
     def test_user_cant_edit_comment_of_another_user(self):
         """Тест невозможности редактирования заметки другого пользователя."""
         note_text = self.note.text
         response = self.reader_client.post(EDIT_URL, data=self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        self.note.refresh_from_db()
-        self.assertEqual(self.note.text, note_text)
+        refreshed_note = Note.objects.get(pk=self.note.pk)
+        self.assertEqual(refreshed_note.text, note_text)
