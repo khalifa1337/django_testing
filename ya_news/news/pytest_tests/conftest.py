@@ -122,3 +122,15 @@ def comment_edit_url(comment):
 def login_url():
     """Фикстура для получения url логина."""
     return reverse('users:login')
+
+
+@pytest.fixture
+def logout_url():
+    """Фикстура для получения url выхода."""
+    return reverse('users:logout')
+
+
+@pytest.fixture
+def signup_url():
+    """Фикстура для получения url регистрации."""
+    return reverse('users:signup')
