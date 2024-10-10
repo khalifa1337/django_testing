@@ -20,7 +20,6 @@ LOGOUT_URL = reverse('users:logout')
 SUCCESS_URL = reverse('notes:success')
 
 
-
 class BaseTestCaseWithoutNote(TestCase):
     """
     Так как для нескольких тестов используются одинаковые пользователи,
