@@ -36,7 +36,9 @@ class TestRoutes(BaseTestCaseWithNote):
         )
 
         for url, user, expected_status in pages:
-            with self.subTest(page=url, expected_status=expected_status):
+            with self.subTest(
+                page=url, expected_status=expected_status, user=user
+            ):
                 response = user.get(url)
                 self.assertEqual(response.status_code, expected_status)
 
